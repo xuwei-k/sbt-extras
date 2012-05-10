@@ -100,7 +100,7 @@ make_url () {
 
 declare -r default_jvm_opts="-Dfile.encoding=UTF8"
 declare -r default_sbt_opts="-XX:+CMSClassUnloadingEnabled"
-declare -r default_sbt_mem=1536
+declare -r default_sbt_mem=4096
 declare -r noshare_opts="-Dsbt.global.base=project/.sbtboot -Dsbt.boot.directory=project/.boot -Dsbt.ivy.home=project/.ivy"
 declare -r sbt_opts_file=".sbtopts"
 declare -r jvm_opts_file=".jvmopts"
