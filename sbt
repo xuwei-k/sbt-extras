@@ -23,7 +23,7 @@ declare -r sbt_launch_ivy_snapshot_repo="https://repo.scala-sbt.org/scalasbt/ivy
 declare -r sbt_launch_mvn_release_repo="https://repo.scala-sbt.org/scalasbt/maven-releases"
 declare -r sbt_launch_mvn_snapshot_repo="https://repo.scala-sbt.org/scalasbt/maven-snapshots"
 
-declare -r default_jvm_opts_common="-Xms512m -Xss2m"
+declare -r default_jvm_opts_common="-Xmx8192m -Xms2048m -Xss8m -XX:MaxMetaspaceSize=2048m -XX:+CMSClassUnloadingEnabled -XX:ReservedCodeCacheSize=1024m"
 declare -r noshare_opts="-Dsbt.global.base=project/.sbtboot -Dsbt.boot.directory=project/.boot -Dsbt.ivy.home=project/.ivy"
 
 declare sbt_jar sbt_dir sbt_create sbt_version sbt_script sbt_new
@@ -495,15 +495,15 @@ readConfigFile() {
 
 # if there are file/environment sbt_opts, process again so we
 # can supply args to this runner
-if [[ -r "$sbt_opts_file" ]]; then
-  vlog "Using sbt options defined in file $sbt_opts_file"
-  while read -r opt; do extra_sbt_opts+=("$opt"); done < <(readConfigFile "$sbt_opts_file")
-elif [[ -n "$SBT_OPTS" && ! ("$SBT_OPTS" =~ ^@.*) ]]; then
-  vlog "Using sbt options defined in variable \$SBT_OPTS"
-  IFS=" " read -r -a extra_sbt_opts <<<"$SBT_OPTS"
-else
-  vlog "No extra sbt options have been defined"
-fi
+#  if [[ -r "$sbt_opts_file" ]]; then
+#    vlog "Using sbt options defined in file $sbt_opts_file"
+#    while read opt; do extra_sbt_opts+=("$opt"); done < <(readConfigFile "$sbt_opts_file")
+#  elif [[ -n "$SBT_OPTS" && ! ("$SBT_OPTS" =~ ^@.*) ]]; then
+#    vlog "Using sbt options defined in variable \$SBT_OPTS"
+#    extra_sbt_opts=( $SBT_OPTS )
+#  else
+#    vlog "No extra sbt options have been defined"
+#  fi
 
 [[ -n "${extra_sbt_opts[*]}" ]] && process_args "${extra_sbt_opts[@]}"
 
@@ -585,19 +585,23 @@ else
   fi
 fi
 
-if [[ -r "$jvm_opts_file" ]]; then
-  vlog "Using jvm options defined in file $jvm_opts_file"
-  while read -r opt; do extra_jvm_opts+=("$opt"); done < <(readConfigFile "$jvm_opts_file")
-elif [[ -n "$JVM_OPTS" && ! ("$JVM_OPTS" =~ ^@.*) ]]; then
-  vlog "Using jvm options defined in \$JVM_OPTS variable"
-  IFS=" " read -r -a extra_jvm_opts <<<"$JVM_OPTS"
-else
-  vlog "Using default jvm options"
-  IFS=" " read -r -a extra_jvm_opts <<<"$( default_jvm_opts)"
-fi
+# if [[ -r "$jvm_opts_file" ]]; then
+#  vlog "Using jvm options defined in file $jvm_opts_file"
+#  while read opt; do extra_jvm_opts+=("$opt"); done < <(readConfigFile "$jvm_opts_file")
+#elif [[ -n "$JVM_OPTS" && ! ("$JVM_OPTS" =~ ^@.*) ]]; then
+#  vlog "Using jvm options defined in \$JVM_OPTS variable"
+#  extra_jvm_opts=( $JVM_OPTS )
+#else
+#  vlog "Using default jvm options"
+  extra_jvm_opts=( $(default_jvm_opts) )
+#fi
 
 # traceLevel is 0.12+
 [[ -n "$trace_level" ]] && setTraceLevel
+
+echo "java-version = $(java_version)"
+echo "${extra_jvm_opts[@]}"
+echo "${java_args[@]}"
 
 execRunner "$java_cmd" \
   "${extra_jvm_opts[@]}" \
